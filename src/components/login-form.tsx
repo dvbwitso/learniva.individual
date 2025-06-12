@@ -1,15 +1,48 @@
+"use client"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LearnivaLogo from "@/app/learniva-black.png"
+import { useState } from "react"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const email = (event.currentTarget.elements.namedItem("email") as HTMLInputElement)?.value
+    const password = (event.currentTarget.elements.namedItem("password") as HTMLInputElement)?.value
+
+    let hasError = false
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("Invalid Email. Try again")
+      hasError = true
+    } else {
+      setEmailError(null)
+    }
+
+    if (!password) {
+      setPasswordError("Wrong Password. Try again")
+      hasError = true
+    } else {
+      setPasswordError(null)
+    }
+
+    if (hasError) {
+      return
+    }
+
+    console.log("Form submitted", { email, password })
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form onSubmit={handleSubmit} className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex justify-start">
         <img src={LearnivaLogo.src } alt="Learniva Logo" className="h-9 w-50" />
       </div>
@@ -22,10 +55,17 @@ export function LoginForm({
       <div className="grid gap-6">
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="mwaka@example.com" required />
+          <Input
+            id="email"
+            type="email"
+            placeholder="mwaka@example.com"
+            required
+            className={cn(emailError && "border-red-500 focus-visible:ring-red-500")}
+          />
+          {emailError && <p className="text-sm text-red-500">{emailError}</p>}
         </div>
         <div className="grid gap-3">
-          <div className="flex items-center color-blue-foreground">
+          <div className="flex items-center">
             <Label htmlFor="password">Password</Label>
             <a
               href="/forgot-password"
@@ -34,7 +74,13 @@ export function LoginForm({
               Forgot your password?
             </a>
           </div>
-          <Input id="password" type="password" required />
+          <Input
+            id="password"
+            type="password"
+            required
+            className={cn(passwordError && "border-red-500 focus-visible:ring-red-500")}
+          />
+          {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
         </div>
         <Button type="submit" className="w-full">
           Login
