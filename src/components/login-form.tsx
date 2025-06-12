@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LearnivaLogo from "@/app/learniva-black.png"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export function LoginForm({
   className,
@@ -13,8 +14,10 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const email = (event.currentTarget.elements.namedItem("email") as HTMLInputElement)?.value
     const password = (event.currentTarget.elements.namedItem("password") as HTMLInputElement)?.value
@@ -38,7 +41,42 @@ export function LoginForm({
       return
     }
 
-    console.log("Form submitted", { email, password })
+    setIsLoading(true)
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/login/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username: email, password }), // Changed email to username: email
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log("Login successful", data)
+        localStorage.setItem("accessToken", data.access)
+        localStorage.setItem("refreshToken", data.refresh)
+        router.push("/dashboard")
+      } else {
+        const errorData = await response.json()
+        console.error("Login failed:", errorData)
+        if (errorData.detail) {
+          setPasswordError(errorData.detail)
+        } else if (errorData.email) {
+          setEmailError(errorData.email.join(" "))
+        } else if (errorData.password) {
+          setPasswordError(errorData.password.join(" "))
+        } else {
+          setPasswordError("Invalid credentials. Please try again.")
+        }
+      }
+    } catch (error) {
+      console.error("An error occurred:", error)
+      setPasswordError("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -60,6 +98,7 @@ export function LoginForm({
             type="email"
             placeholder="mwaka@example.com"
             required
+            disabled={isLoading}
             className={cn(emailError && "border-red-500 focus-visible:ring-red-500")}
           />
           {emailError && <p className="text-sm text-red-500">{emailError}</p>}
@@ -78,12 +117,13 @@ export function LoginForm({
             id="password"
             type="password"
             required
+            disabled={isLoading}
             className={cn(passwordError && "border-red-500 focus-visible:ring-red-500")}
           />
           {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
         </div>
-        <Button type="submit" className="w-full">
-          Login
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Logging in..." : "Login"}
         </Button>
       </div>
       <div className="text-center text-sm">
