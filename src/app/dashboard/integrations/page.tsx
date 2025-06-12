@@ -126,34 +126,34 @@ export default function IntegrationsPage() {
           {/* Breadcrumbs removed from here */}
           <div className="container mx-auto py-8 px-4 md:px-6">
             <header className="mb-8">
-              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">Integrations</h1>
-              <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
+              <h1 className="text-3xl font-bold tracking-tight text-black dark:text-white">Integrations</h1>
+              <p className="mt-2 text-lg text-neutral-600 dark:text-neutral-400">
                 Connect your favorite tools to streamline your workflow and boost productivity.
               </p>
             </header>
 
             <div className="space-y-8">
               {integrations.map((integration) => (
-                <Card key={integration.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 dark:bg-gray-800">
+                <Card key={integration.id} className="overflow-hidden border dark:border-neutral-800 dark:bg-neutral-950 transition-colors duration-200">
                   <CardHeader className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <Avatar className="h-12 w-12 border dark:border-gray-700">
+                        <Avatar className="h-12 w-12 border dark:border-neutral-700">
                           {/* <AvatarImage src={`/icons/${integration.id}.svg`} alt={`${integration.name} logo`} /> */}
-                          <AvatarFallback className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
+                          <AvatarFallback className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                             <integration.IconComponent />
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                          <CardTitle className="text-xl font-semibold text-black dark:text-white flex items-center">
                             {integration.name}
                             {integration.proFeature && (
-                              <Badge variant="default" className="ml-2 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full">
+                              <Badge variant="outline" className="ml-2 text-xs px-1.5 py-0.5 rounded-full border-neutral-400 text-neutral-600 dark:text-neutral-400 dark:border-neutral-600">
                                 Pro
                               </Badge>
                             )}
                           </CardTitle>
-                          <CardDescription className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          <CardDescription className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                             {integration.description}
                           </CardDescription>
                         </div>
@@ -161,7 +161,7 @@ export default function IntegrationsPage() {
                       <div className="flex flex-col items-end space-y-2">
                         {integration.connected ? (
                           <>
-                            <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50 dark:bg-green-900/50 dark:text-green-400 dark:border-green-700">
+                            <Badge variant="outline" className="border-neutral-400 text-neutral-700 bg-neutral-100 dark:text-neutral-300 dark:border-neutral-600 dark:bg-neutral-800">
                               <CheckCircle className="mr-1 h-4 w-4" />
                               Connected
                             </Badge>
@@ -172,18 +172,18 @@ export default function IntegrationsPage() {
                                 </a>
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50">
+                            <Button variant="outline" size="sm" className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 dark:text-neutral-300 dark:border-neutral-700 dark:hover:bg-neutral-800">
                               Disconnect
                             </Button>
                           </>
                         ) : (
                           <>
-                            <Badge variant="outline" className="border-gray-300 text-gray-500 bg-gray-50 dark:bg-gray-700/50 dark:text-gray-400 dark:border-gray-600">
+                            <Badge variant="outline" className="border-neutral-300 text-neutral-500 bg-neutral-50 dark:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800/50">
                               <XCircle className="mr-1 h-4 w-4" />
                               Not Connected
                             </Badge>
                             {integration.connectLink ? (
-                              <Button size="sm" asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                              <Button size="sm" asChild className="bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200">
                                  <a href={integration.connectLink}>
                                   <Zap className="mr-1 h-4 w-4" /> Connect
                                 </a>
@@ -203,11 +203,11 @@ export default function IntegrationsPage() {
               ))}
             </div>
 
-            <Separator className="my-12 dark:bg-gray-700" />
+            <Separator className="my-12 dark:bg-neutral-800" />
 
-            <section className="p-6 bg-gray-100 dark:bg-gray-800 rounded-lg shadow">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-3">Looking for more?</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <section className="p-6 bg-neutral-100 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-2xl font-semibold text-black dark:text-white mb-3">Looking for more?</h2>
+              <p className="text-neutral-600 dark:text-neutral-400 mb-4">
                 We are constantly working on adding new integrations. If you have a specific tool you'd like to see, let us know!
               </p>
               <Button variant="outline">Request an Integration</Button>

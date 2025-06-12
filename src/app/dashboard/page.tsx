@@ -9,14 +9,27 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Plus, Sun, Moon, Video, ImageIcon, FileText, Send } from "lucide-react"
+import { Plus, Sun, Moon, Video, BookOpenCheck, FileText, Send, UploadCloud } from "lucide-react"; // Added UploadCloud, BookOpenCheck, removed ImageIcon
 import Link from "next/link";
 import Image from "next/image"; // Import the Image component
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useState, useEffect } from 'react'; // For date
+import { useState, useEffect, useRef } from 'react'; // For date and input ref
+import { UploadAssignmentModal } from "@/components/ui/upload-assignment-modal"; // Import the modal
+
+interface ChatMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'eva';
+  timestamp: Date;
+}
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState('');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); // State for modal
+  const [inputValue, setInputValue] = useState(''); // State for the input field
+  const inputRef = useRef<HTMLInputElement>(null); // Ref for the input field
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const date = new Date();
@@ -26,6 +39,49 @@ export default function DashboardPage() {
   const userName = "Thomas";
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const handleFileUploadComplete = (files: File[]) => {
+    console.log("Files submitted:", files);
+    // Handle the submitted files here (e.g., send to a server)
+  };
+
+  const handleCardClick = (promptText: string) => {
+    setInputValue(promptText);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const handleSendMessage = () => {
+    if (inputValue.trim() === '') return;
+
+    const newUserMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: inputValue,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+    setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+    setInputValue('');
+
+    // Simulate Eva's response
+    setTimeout(() => {
+      const evasResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(), // Ensure unique ID
+        text: `Eva is thinking about: "${newUserMessage.text}"`, // Simple echo response for now
+        sender: 'eva',
+        timestamp: new Date(),
+      };
+      setMessages((prevMessages) => [...prevMessages, evasResponse]);
+    }, 1000);
+  };
+
+  // Scroll to bottom of chat when new messages are added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   return (
     <SidebarProvider>
@@ -57,75 +113,113 @@ export default function DashboardPage() {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col items-center justify-center overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
+        <main className="flex-1 flex flex-col items-center overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
           
-          <div className="w-full max-w-4xl flex flex-col items-center text-center">
-            {/* LearnivaAI Logo */}
-            <div className="mb-8">
-              <Image
-                src="/symbol.png" // Path to your logo in the public folder
-                alt="LearnivaAI Logo"
-                width={80} // Adjust width as needed
-                height={80} // Adjust height as needed
-                priority // Prioritize loading for LCP
-              />
-            </div>
-
-            {/* Greeting and Prompt */}
-            <div className="mb-10 sm:mb-12">
-              <h2 className="text-xl sm:text-2xl font-medium text-muted-foreground mb-1 sm:mb-2">Goodmorning {userName}</h2>
-              <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight">How can I assist you today?</p>
-            </div>
-
-            {/* Suggestion Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full mb-10 sm:mb-12">
-              {/* Card 1: Generate Video */}
-              <Card className="p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left bg-card">
-                <div className="flex items-center mb-2 sm:mb-3">
-                  <Video className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-primary shrink-0" />
-                  <CardTitle className="text-base sm:text-lg font-semibold">Help Me Generate a video</CardTitle>
+          {/* Chat Messages Display */}
+          <div ref={chatContainerRef} className="w-full max-w-4xl flex-1 overflow-y-auto mb-4 space-y-4 p-4 rounded-lg bg-muted/40 scroll-smooth">
+            {messages.length === 0 && (
+              <div className="w-full max-w-4xl flex flex-col items-center text-center pt-10">
+                {/* LearnivaAI Logo */}
+                <div className="mb-8">
+                  <Image
+                    src="/symbol.png" // Path to your logo in the public folder
+                    alt="LearnivaAI Logo"
+                    width={80} // Adjust width as needed
+                    height={80} // Adjust height as needed
+                    priority // Prioritize loading for LCP
+                  />
                 </div>
-                <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-                  Kindly generate flashcards, relevant practice exercises, and organized notes derived from the attached document.
-                </CardDescription>
-              </Card>
 
-              {/* Card 2: Generate Image */}
-              <Card className="p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left bg-card">
-                <div className="flex items-center mb-2 sm:mb-3">
-                  <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-primary shrink-0" />
-                  <CardTitle className="text-base sm:text-lg font-semibold">Help Me Generate an image</CardTitle>
+                {/* Greeting and Prompt */}
+                <div className="mb-10 sm:mb-12">
+                  <h2 className="text-xl sm:text-2xl font-medium text-muted-foreground mb-1 sm:mb-2">Goodmorning {userName}</h2>
+                  <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight">How can I assist you today?</p>
                 </div>
-                <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-                  Kindly generate flashcards, relevant practice exercises, and organized notes derived from the attached document.
-                </CardDescription>
-              </Card>
 
-              {/* Card 3: Summarize Document */}
-              <Card className="p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left bg-card">
-                <div className="flex items-center mb-2 sm:mb-3">
-                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-primary shrink-0" />
-                  <CardTitle className="text-base sm:text-lg font-semibold">Summarize a document</CardTitle>
+                {/* Suggestion Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 w-full mb-10 sm:mb-12">
+                  {/* Card 1: Generate Video */}
+                  <Card 
+                    className="p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left bg-card cursor-pointer"
+                    onClick={() => handleCardClick("Help Me Generate an engaging animation about...")}
+                  >
+                    <div className="flex items-center mb-2 sm:mb-3">
+                      <Video className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-primary shrink-0" />
+                      <CardTitle className="text-base sm:text-lg font-semibold">Generate Engaging Animations</CardTitle>
+                    </div>
+                    <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+                      Transform your notes into dynamic animations to visualize complex concepts.
+                    </CardDescription>
+                  </Card>
+
+                  {/* Card 2: Create Study Materials */}
+                  <Card 
+                    className="p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left bg-card cursor-pointer"
+                    onClick={() => handleCardClick("Create study materials like flashcards and practice exercises for...")}
+                  >
+                    <div className="flex items-center mb-2 sm:mb-3">
+                      <BookOpenCheck className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-primary shrink-0" />
+                      <CardTitle className="text-base sm:text-lg font-semibold">Create Study Materials</CardTitle>
+                    </div>
+                    <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+                      Generate interactive flashcards and custom practice exercises from your documents.
+                    </CardDescription>
+                  </Card>
+
+                  {/* Card 3: Structure Your Notes */}
+                  <Card 
+                    className="p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left bg-card cursor-pointer"
+                    onClick={() => handleCardClick("Structure my notes on... and extract key concepts.")}
+                  >
+                    <div className="flex items-center mb-2 sm:mb-3">
+                      <FileText className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-primary shrink-0" />
+                      <CardTitle className="text-base sm:text-lg font-semibold">Structure Your Notes</CardTitle>
+                    </div>
+                    <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+                      Convert unstructured content into well-organized notes and extract key concepts.
+                    </CardDescription>
+                  </Card>
                 </div>
-                <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-                  Kindly generate flashcards, relevant practice exercises, and organized notes derived from the attached document.
-                </CardDescription>
-              </Card>
-            </div>
+              </div>
+            )}
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[70%] p-3 rounded-lg ${msg.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground shadow-sm'}`}
+                >
+                  <p className="text-sm">{msg.text}</p>
+                  <p className="text-xs mt-1 ${msg.sender === 'user' ? 'text-primary-foreground/80' : 'text-muted-foreground/80'} text-right">
+                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
           
           {/* Input Bar - positioned at the bottom of the main content area */}
           <div className="w-full max-w-2xl lg:max-w-3xl mt-auto sticky bottom-4 sm:bottom-6 px-1">
             <div className="relative flex items-center bg-card p-1.5 sm:p-2 rounded-full shadow-xl border">
-              <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted shrink-0">
+              <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted shrink-0" onClick={() => setIsUploadModalOpen(true)}>
                 <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="sr-only">Add attachment</span>
               </Button>
               <Input
+                ref={inputRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
                 placeholder={`Ask eva what you'd like to learn today`}
                 className="flex-1 h-10 sm:h-12 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base placeholder:text-muted-foreground px-2 sm:px-3"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // Prevent newline in input
+                    handleSendMessage();
+                  }
+                }}
               />
-              <Button variant="default" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-foreground text-background hover:bg-foreground/90 shrink-0">
+              <Button variant="default" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-foreground text-background hover:bg-foreground/90 shrink-0" onClick={handleSendMessage}>
                 <Send className="h-4 w-4 sm:h-5 sm:w-5" /> 
                 <span className="sr-only">Send message</span>
               </Button>
@@ -133,6 +227,11 @@ export default function DashboardPage() {
           </div>
         </main>
       </SidebarInset>
+      <UploadAssignmentModal
+        isOpen={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        onUploadComplete={handleFileUploadComplete}
+      />
     </SidebarProvider>
   );
 }

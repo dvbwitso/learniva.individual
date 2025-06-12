@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import Link from "next/link"
 
 // --- SVG Logo Components (remain unchanged) ---
 // Expanded logo (full text + symbol)
@@ -73,7 +74,7 @@ const SearchBar = () => (
         <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-                placeholder="Search"
+                placeholder="Search or use @commands (@Notion, @GitHub, @Video)"
                 className="pl-8 bg-background/50 border-border"
             />
         </div>
@@ -89,13 +90,17 @@ const MyWorkspaces = () => {
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2 space-y-1">
-                <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50 text-sm">
+                <a href="/dashboard/workspace" className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50 text-sm">
                     <Circle className="h-3 w-3 text-green-500 fill-green-500" />
-                    <span>Demo</span>
+                    <span>Create New Workspace</span>
                 </a>
                 <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50 text-sm">
                     <Circle className="h-3 w-3 text-blue-500 fill-blue-500" />
-                    <span>Deep Dive</span>
+                    <span>Calculus 101</span>
+                </a>
+                 <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-muted/50 text-sm">
+                    <Circle className="h-3 w-3 text-purple-500 fill-purple-500" />
+                    <span>Physics - Mechanics</span>
                 </a>
             </CollapsibleContent>
         </Collapsible>
@@ -103,9 +108,9 @@ const MyWorkspaces = () => {
 }
 
 const navLinks = [
-    { title: "Report bug", icon: Sun, href: "#" },
-    { title: "Help", icon: HelpCircle, href: "#" },
-    { title: "Join our Slack", icon: Slack, href: "#" },
+    { title: "Report bug", icon: Sun, href: "/dashboard/bug-report" },
+    { title: "Help", icon: HelpCircle, href: "/dashboard/help" },
+    { title: "Join our Slack", icon: Slack, href: "/dashboard/join-community" },
     { title: "Integrations", icon: Settings2, href: "/dashboard/integrations" },
 ]
 
@@ -153,14 +158,14 @@ export function AppSidebar({ isCollapsed, ...props }: AppSidebarProps) {
         <hr className="my-2 mx-4 border-border" />
         <nav className="px-4 py-2 space-y-1">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.title}
               href={link.href}
               className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50 text-sm font-medium text-foreground"
             >
               <link.icon className="h-5 w-5 text-muted-foreground" />
               <span>{link.title}</span>
-            </a>
+            </Link>
           ))}
         </nav>
       </SidebarContent>
