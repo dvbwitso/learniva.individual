@@ -6,23 +6,37 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LearnivaLogo from "@/app/learniva-black.png"
 import { useState } from "react"
+import { useRouter } from "next/navigation" // Import useRouter
+import { registerUser } from "@/lib/auth" // Import registerUser
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
+  const [usernameError, setUsernameError] = useState<string | null>(null) // Add state for username
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false) // Add isLoading state
+  const router = useRouter() // Initialize useRouter
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const username = (event.currentTarget.elements.namedItem("username") as HTMLInputElement)?.value // Get username
     const email = (event.currentTarget.elements.namedItem("email") as HTMLInputElement)?.value
     const password = (event.currentTarget.elements.namedItem("password") as HTMLInputElement)?.value
     const confirmPassword = (event.currentTarget.elements.namedItem("confirm-password") as HTMLInputElement)?.value
 
     let hasError = false
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    // Username validation (basic)
+    if (!username) {
+      setUsernameError("Username is required.")
+      hasError = true
+    } else {
+      setUsernameError(null)
+    }
+
+    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
       setEmailError("Invalid Email. Try again")
       hasError = true
     } else {
@@ -47,8 +61,27 @@ export function SignupForm({
       return
     }
 
-    console.log("Form submitted", { email, password })
-    // Add your signup logic here
+    setIsLoading(true) // Set loading state
+
+    try {
+      const data = await registerUser(username, email, password)
+      console.log("Signup successful", data)
+      // Redirect to login or dashboard page after successful registration
+      router.push("/login") 
+    } catch (error: any) {
+      console.error("Signup failed:", error)
+      // Display a generic error or parse specific errors from `error.message`
+      // This example sets a general password error, adjust as needed
+      if (error.message) {
+        // You might want to parse the error.message to set specific field errors
+        // For now, setting a general error on the password field or a new general error state
+        setPasswordError(error.message) 
+      } else {
+        setPasswordError("An unexpected error occurred. Please try again.")
+      }
+    } finally {
+      setIsLoading(false) // Reset loading state
+    }
   }
 
   return (
@@ -63,6 +96,18 @@ export function SignupForm({
         </p>
       </div>
       <div className="grid gap-6">
+        <div className="grid gap-3">
+          <Label htmlFor="username">Username</Label> {/* Add Username Field */}
+          <Input
+            id="username"
+            type="text"
+            placeholder="yourusername"
+            required
+            disabled={isLoading}
+            className={cn(usernameError && "border-red-500 focus-visible:ring-red-500")}
+          />
+          {usernameError && <p className="text-sm text-red-500">{usernameError}</p>}
+        </div>
         <div className="grid gap-3">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -94,8 +139,8 @@ export function SignupForm({
           />
           {confirmPasswordError && <p className="text-sm text-red-500">{confirmPasswordError}</p>}
         </div>
-        <Button type="submit" className="w-full">
-          Create account
+        <Button type="submit" className="w-full" disabled={isLoading}> {/* Disable button when loading */}
+          {isLoading ? "Creating account..." : "Create account"} {/* Change button text when loading */}
         </Button>
         <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
           <span className="bg-background text-muted-foreground relative z-10 px-2">

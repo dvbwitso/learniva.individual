@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LearnivaLogo from "@/app/learniva-black.png"
-import { useState } from "react"
+import { useState, useEffect } from "react" // Import useEffect
+import { useRouter, useSearchParams } from "next/navigation" // Import useRouter and useSearchParams
+import { confirmPasswordReset } from "@/lib/auth" // Import confirmPasswordReset
 
 export function ConfirmResetForm({
   className,
@@ -13,21 +15,48 @@ export function ConfirmResetForm({
 }: React.ComponentProps<"form">) {
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  // State for uidb64 and token from URL
+  const [uidb64, setUidb64] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Extract uidb64 and token from URL query parameters
+    // This assumes your route is /reset-password?uidb64=xxx&token=yyy
+    // Adjust if your URL structure is different (e.g., /reset-password/[uidb64]/[token])
+    const uid = searchParams.get('uidb64')
+    const tkn = searchParams.get('token')
+    setUidb64(uid)
+    setToken(tkn)
+
+    if (!uid || !tkn) {
+      setMessage("Invalid password reset link. Please request a new one.")
+      // Optionally disable the form or redirect
+    }
+  }, [searchParams])
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const password = (event.currentTarget.elements.namedItem("new-password") as HTMLInputElement)?.value
+    setMessage(null)
+    setPasswordError(null)
+    setConfirmPasswordError(null)
+
+    const newPassword = (event.currentTarget.elements.namedItem("new-password") as HTMLInputElement)?.value
     const confirmPassword = (event.currentTarget.elements.namedItem("confirm-password") as HTMLInputElement)?.value
 
     let hasError = false
-    if (!password) {
+    if (!newPassword) {
       setPasswordError("Password is required.")
       hasError = true
     } else {
       setPasswordError(null)
     }
 
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setConfirmPasswordError("Passwords do not match. Try again")
       hasError = true
     } else {
@@ -38,8 +67,30 @@ export function ConfirmResetForm({
       return
     }
 
-    console.log("Form submitted", { password })
-    // Add your confirm password reset logic here
+    if (!uidb64 || !token) {
+      setMessage("Missing reset parameters. Please use the link from your email.")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const data = await confirmPasswordReset(uidb64, token, newPassword)
+      console.log("Password reset successful", data)
+      setMessage(data.detail || "Your password has been reset successfully. You can now login.")
+      // Optionally redirect to login page after a delay
+      setTimeout(() => router.push("/login"), 3000)
+    } catch (error: any) {
+      console.error("Password reset failed:", error)
+      if (error.message) {
+        // More specific error handling can be added here if the API provides distinct error codes/messages
+        setMessage(error.message)
+      } else {
+        setMessage("An unexpected error occurred. Please try again.")
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -76,9 +127,10 @@ export function ConfirmResetForm({
           />
           {confirmPasswordError && <p className="text-sm text-red-500">{confirmPasswordError}</p>}
         </div>
-        <Button type="submit" className="w-full">
-          Update password
+        <Button type="submit" className="w-full" disabled={isLoading || !uidb64 || !token}>
+          {isLoading ? "Updating password..." : "Update password"}
         </Button>
+        {message && <p className="text-sm text-center mt-4">{message}</p>} {/* Display message */}
       </div>
       <div className="text-center text-sm">
         Remember your password?{" "}

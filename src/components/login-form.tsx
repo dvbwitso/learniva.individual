@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import LearnivaLogo from "@/app/learniva-black.png"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { loginUser } from "@/lib/auth" // Import the loginUser function
 
 export function LoginForm({
   className,
@@ -44,36 +45,27 @@ export function LoginForm({
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/login/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username: email, password }), // Changed email to username: email
-      })
+      const responseData = await loginUser(email, password) 
 
-      if (response.ok) {
-        const data = await response.json()
-        console.log("Login successful", data)
-        localStorage.setItem("accessToken", data.access)
-        localStorage.setItem("refreshToken", data.refresh)
-        router.push("/dashboard")
+      console.log("Login successful", responseData)
+      
+      const token = responseData?.data?.token;
+
+      if (token && typeof token === 'string') {
+        localStorage.setItem("authToken", token);
+        router.push("/dashboard");
       } else {
-        const errorData = await response.json()
-        console.error("Login failed:", errorData)
-        if (errorData.detail) {
-          setPasswordError(errorData.detail)
-        } else if (errorData.email) {
-          setEmailError(errorData.email.join(" "))
-        } else if (errorData.password) {
-          setPasswordError(errorData.password.join(" "))
-        } else {
-          setPasswordError("Invalid credentials. Please try again.")
-        }
+        console.error("Login response did not contain a valid token at responseData.data.token. Full response:", responseData);
+        setPasswordError("Login failed: Authentication token not found or invalid in server response.");
       }
-    } catch (error) {
-      console.error("An error occurred:", error)
-      setPasswordError("An unexpected error occurred. Please try again.")
+    } catch (error: any) {
+      console.error("Login failed:", error)
+      // Handle errors based on the error structure from loginUser
+      if (error.message) {
+        setPasswordError(error.message)
+      } else {
+        setPasswordError("An unexpected error occurred. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }

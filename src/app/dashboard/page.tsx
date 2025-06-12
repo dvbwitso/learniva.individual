@@ -9,12 +9,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Plus, Sun, Moon, Video, BookOpenCheck, FileText, Send, UploadCloud } from "lucide-react"; // Added UploadCloud, BookOpenCheck, removed ImageIcon
+import { Plus, Sun, Moon, Video, BookOpenCheck, FileText, Send, UploadCloud } from "lucide-react"; 
 import Link from "next/link";
-import Image from "next/image"; // Import the Image component
+import Image from "next/image"; 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useState, useEffect, useRef } from 'react'; // For date and input ref
-import { UploadAssignmentModal } from "@/components/ui/upload-assignment-modal"; // Import the modal
+import { useState, useEffect, useRef } from 'react'; 
+import { UploadAssignmentModal } from "@/components/ui/upload-assignment-modal"; 
+import { getUserData } from "@/lib/auth"; // Import getUserData
+import { useRouter } from "next/navigation"; // Import useRouter
 
 interface ChatMessage {
   id: string;
@@ -25,18 +27,50 @@ interface ChatMessage {
 
 export default function DashboardPage() {
   const [currentDate, setCurrentDate] = useState('');
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); // State for modal
-  const [inputValue, setInputValue] = useState(''); // State for the input field
-  const inputRef = useRef<HTMLInputElement>(null); // Ref for the input field
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
+  const [inputValue, setInputValue] = useState(''); 
+  const inputRef = useRef<HTMLInputElement>(null); 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [userName, setUserName] = useState("User"); // Default username
+  const [userFirstName, setUserFirstName] = useState("User"); // State for user's first name
+  const router = useRouter(); // Initialize router
 
   useEffect(() => {
     const date = new Date();
     setCurrentDate(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' }));
-  }, []);
 
-  const userName = "Thomas";
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        try {
+          const userData = await getUserData(token);
+          console.log("User data:", userData);
+          if (userData.first_name) {
+            setUserFirstName(userData.first_name);
+          }
+          if (userData.username) {
+            setUserName(userData.username); // Set username for Avatar fallback
+          }
+        } catch (error: any) {
+          console.error("Failed to fetch user data:", error);
+          // If token is invalid or expired, redirect to login
+          if (error.message.includes("Authentication credentials were not provided") || error.message.includes("Invalid token")) {
+            localStorage.removeItem("authToken"); // Clear invalid token
+            router.push("/login");
+          }
+        }
+      } else {
+        // No token found, redirect to login
+        router.push("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [router]); // Add router to dependency array
+
+
+  // const userName = "Thomas"; // Replaced by state
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -106,7 +140,7 @@ export default function DashboardPage() {
             <Link href="/profile">
               <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                 <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
-                <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+                <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback> {/* Uses userName state */}
               </Avatar>
             </Link>
           </div>
@@ -132,7 +166,7 @@ export default function DashboardPage() {
 
                 {/* Greeting and Prompt */}
                 <div className="mb-10 sm:mb-12">
-                  <h2 className="text-xl sm:text-2xl font-medium text-muted-foreground mb-1 sm:mb-2">Goodmorning {userName}</h2>
+                  <h2 className="text-xl sm:text-2xl font-medium text-muted-foreground mb-1 sm:mb-2">Goodmorning {userFirstName}</h2> {/* Use userFirstName */}
                   <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight">How can I assist you today?</p>
                 </div>
 

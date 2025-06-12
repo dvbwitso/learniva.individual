@@ -2,6 +2,7 @@ import { GalleryVerticalEnd } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
 import Image from "next/image";
 import { LoginCarousel } from "@/components/login-carousel";
+import learnivaBlackLogo from "../learniva-black.png"; // Import the image
 
 // Import the new Carousel component (we'll create this next)
 export default function LoginPage() {
@@ -15,7 +16,7 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs space-y-6">
             <div className="text-center">
-              <Image src="/learniva-black.png" alt="LearnivaAI Logo" width={150} height={40} className="mx-auto mb-4" />
+              <Image src={learnivaBlackLogo} alt="LearnivaAI Logo" width={150} height={40} className="mx-auto mb-4" />
             </div>
             <LoginForm />
           </div>

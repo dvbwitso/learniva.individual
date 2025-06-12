@@ -6,15 +6,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import LearnivaLogo from "@/app/learniva-black.png"
 import { useState } from "react"
+import { requestPasswordReset } from "@/lib/auth" // Import requestPasswordReset
 
 export function PasswordResetForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false) // Add isLoading state
+  const [message, setMessage] = useState<string | null>(null) // State for success/error messages
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setMessage(null) // Clear previous messages
+    setEmailError(null) // Clear previous email error
     const email = (event.currentTarget.elements.namedItem("email") as HTMLInputElement)?.value
 
     let hasError = false
@@ -29,8 +34,25 @@ export function PasswordResetForm({
       return
     }
 
-    console.log("Form submitted", { email })
-    // Add your password reset logic here
+    setIsLoading(true)
+
+    try {
+      const data = await requestPasswordReset(email)
+      console.log("Password reset request successful", data)
+      // Display a success message to the user
+      // The actual message from API might vary, adjust `data.detail` if needed
+      setMessage(data.detail || "If an account with that email exists, a password reset link has been sent.")
+    } catch (error: any) {
+      console.error("Password reset request failed:", error)
+      // Display error message
+      if (error.message) {
+        setEmailError(error.message) // Or set a general message using setMessage
+      } else {
+        setMessage("An unexpected error occurred. Please try again.")
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -56,9 +78,10 @@ export function PasswordResetForm({
           />
           {emailError && <p className="text-sm text-red-500">{emailError}</p>}
         </div>
-        <Button type="submit" className="w-full">
-          Reset password
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Sending link..." : "Reset password"}
         </Button>
+        {message && <p className="text-sm text-center">{message}</p>} {/* Display success/error message */}
       </div>
       <div className="text-center text-sm">
         Remembered your password?{" "}
