@@ -61,8 +61,9 @@ export async function requestPasswordReset(email: string) {
     body: JSON.stringify({ email }),
   });
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Password reset request failed');
+    const errorData = await response.json().catch(() => ({ detail: "Password reset request failed and could not parse error response." }));
+    console.error("Password reset request failed. Server response:", errorData);
+    throw { message: errorData.detail || 'Password reset request failed', data: errorData };
   }
   return response.json();
 }
@@ -74,17 +75,54 @@ export async function requestPasswordReset(email: string) {
  * @param newPassword The user\\'s new password.
  * @returns The server response.
  */
-export async function confirmPasswordReset(uidb64: string, token: string, newPassword: string) {
-  const response = await fetch(`${API_BASE_URL}/api/password/reset/confirm/${uidb64}/${token}/`, {
-    method: 'POST',
+export async function confirmPasswordReset(uidb64: string, token: string, newPassword1: string) {
+  const response = await fetch(`${API_BASE_URL}/auth/password/reset/confirm/`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ new_password: newPassword }), // Assuming the API expects new_password
+    body: JSON.stringify({ uid: uidb64, token, new_password1: newPassword1, new_password2: newPassword1 }), // Assuming new_password2 is same as newPassword1
   });
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Password reset confirmation failed');
+    const errorData = await response.json().catch(() => ({ detail: "An unknown error occurred." }));
+    throw new Error(errorData.detail || "Failed to confirm password reset.");
+  }
+  return response.json();
+}
+
+/**
+ * Changes the user's password.
+ * @param oldPassword The user's current password.
+ * @param newPassword1 The user's new password.
+ * @returns The server response.
+ */
+export async function changePassword(oldPassword: string, newPassword1: string) {
+  const authToken = localStorage.getItem("learniva_token"); // Or however you store the auth token
+  if (!authToken) {
+    throw new Error("User not authenticated. Please login again.");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/auth/password/change/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${authToken}`, // Or `Token ${authToken}` depending on backend
+    },
+    body: JSON.stringify({ old_password: oldPassword, new_password1: newPassword1, new_password2: newPassword1 }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: "An unknown error occurred during password change." }));
+    // Attempt to parse more specific errors if available
+    let errorMessage = errorData.detail || "Failed to change password.";
+    if (errorData.old_password) errorMessage = `Old password: ${errorData.old_password.join(' ')}`;
+    else if (errorData.new_password1) errorMessage = `New password: ${errorData.new_password1.join(' ')}`;
+    else if (errorData.new_password2) errorMessage = `Confirm new password: ${errorData.new_password2.join(' ')}`;
+    
+    const customError = new Error(errorMessage);
+    // @ts-ignore
+    customError.response = { data: errorData }; // Attach full response data for component to use
+    throw customError;
   }
   return response.json();
 }
@@ -141,3 +179,5 @@ export async function logoutUser(authToken: string) {
   }
   return response.json(); // Or handle as appropriate for your API
 }
+
+// Social Authentication
