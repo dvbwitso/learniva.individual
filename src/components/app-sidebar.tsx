@@ -30,6 +30,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
+import { logoutUser } from "@/lib/auth"; // Import the logoutUser function
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 // --- SVG Logo Components (remain unchanged) ---
 // Expanded logo (full text + symbol)
@@ -139,10 +141,34 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ isCollapsed, ...props }: AppSidebarProps) {
+  const router = useRouter(); // Initialize the router
+
   // If the sidebar is collapsed, render nothing.
   if (isCollapsed) {
     return null;
   }
+
+  const handleLogout = async () => {
+    try {
+      // Assuming you store the auth token in localStorage or a similar place
+      const authToken = localStorage.getItem("authToken");
+      if (authToken) {
+        await logoutUser(authToken);
+        localStorage.removeItem("authToken"); // Clear the token
+        // Redirect to login page or home page after logout
+        router.push("/login");
+      } else {
+        console.error("No auth token found for logout");
+        // Optionally, redirect to login even if no token, as a fallback
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Handle logout error (e.g., show a notification to the user)
+      // For now, we can still try to redirect to login
+      router.push("/login");
+    }
+  };
 
   // If not collapsed, render the full sidebar.
   // We no longer need the 'collapsible' prop or any group-data classes for hiding content.
@@ -171,7 +197,7 @@ export function AppSidebar({ isCollapsed, ...props }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="border-t p-4">
-        <Button variant="ghost" className="w-full justify-start space-x-3 text-sm font-medium text-foreground hover:bg-muted/50">
+        <Button variant="ghost" className="w-full justify-start space-x-3 text-sm font-medium text-foreground hover:bg-muted/50" onClick={handleLogout}>
           <LogOut className="h-5 w-5 text-muted-foreground" />
           <span>Logout</span>
         </Button>

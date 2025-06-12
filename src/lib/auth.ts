@@ -105,3 +105,36 @@ export async function getUserData(authToken: string) {
   }
   return response.json();
 }
+
+/**
+ * Logs out the currently authenticated user.
+ * @param authToken The user\'s authentication token.
+ * @returns The server response.
+ */
+export async function logoutUser(authToken: string) {
+  const response = await fetch(`${API_BASE_URL}/api/logout/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+  });
+  if (!response.ok) {
+    // It\'s possible the logout endpoint doesn\'t return JSON on success
+    // or even on failure in some cases. Handle potential errors gracefully.
+    try {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Logout failed');
+    } catch (e) {
+      // If parsing JSON fails or it\'s not a JSON response
+      throw new Error(`Logout failed with status: ${response.status}`);
+    }
+  }
+  // Logout might not return content, or it might return a confirmation.
+  // If no content is expected, you might not need to parse response.json().
+  // For now, let\'s assume it might return something or just succeed with 2xx.
+  if (response.status === 204 || response.headers.get("content-length") === "0") { // No Content
+    return null;
+  }
+  return response.json(); // Or handle as appropriate for your API
+}

@@ -15,9 +15,6 @@ export default function LoginPage() {
       <div className="flex flex-col gap-4 p-6 md:p-10 bg-white dark:bg-gray-950">
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs space-y-6">
-            <div className="text-center">
-              <Image src={learnivaBlackLogo} alt="LearnivaAI Logo" width={150} height={40} className="mx-auto mb-4" />
-            </div>
             <LoginForm />
           </div>
         </div>
