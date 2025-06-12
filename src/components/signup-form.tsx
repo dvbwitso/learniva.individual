@@ -36,7 +36,7 @@ export function SignupForm({
       setUsernameError(null)
     }
 
-    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError("Invalid Email. Try again")
       hasError = true
     } else {
@@ -64,7 +64,8 @@ export function SignupForm({
     setIsLoading(true) // Set loading state
 
     try {
-      const data = await registerUser(username, email, password)
+      // Pass both password and confirmPassword to registerUser
+      const data = await registerUser(username, email, password, confirmPassword) 
       console.log("Signup successful", data)
       // Redirect to login or dashboard page after successful registration
       router.push("/login") 
@@ -72,9 +73,37 @@ export function SignupForm({
       console.error("Signup failed:", error)
       // Display a generic error or parse specific errors from `error.message`
       // This example sets a general password error, adjust as needed
-      if (error.message) {
-        // You might want to parse the error.message to set specific field errors
-        // For now, setting a general error on the password field or a new general error state
+      if (error.data) { // Check if error.data exists (the structured error from auth.ts)
+        console.error("Server error details:", error.data);
+        // Set specific field errors based on the error.data object
+        if (error.data.username) {
+          setUsernameError(error.data.username.join(", "));
+        }
+        if (error.data.email) {
+          setEmailError(error.data.email.join(", "));
+        }
+        if (error.data.password) { // Django often uses 'password' or 'non_field_errors'
+          setPasswordError(error.data.password.join(", "));
+        } else if (error.data.password1) {
+          setPasswordError(error.data.password1.join(", "));
+        }
+        if (error.data.password2) {
+          setConfirmPasswordError(error.data.password2.join(", "));
+        } 
+        // Handle non_field_errors or other general errors if necessary
+        if (error.data.non_field_errors) {
+            // Display this error in a general error message area if you have one
+            // For now, appending to passwordError or creating a new state for general errors
+            setPasswordError(prev => prev ? `${prev} ${error.data.non_field_errors.join(", ")}` : error.data.non_field_errors.join(", "));
+        }
+        // If there's a general message and no specific field errors were caught by the above
+        if (!error.data.username && !error.data.email && !error.data.password && !error.data.password1 && !error.data.password2 && error.message) {
+            setPasswordError(error.message) // Fallback to the general message
+        }
+
+      } else if (error.message) {
+        // Log the full error message from the server
+        console.error("Server error details:", error.message); 
         setPasswordError(error.message) 
       } else {
         setPasswordError("An unexpected error occurred. Please try again.")

@@ -26,20 +26,23 @@ export async function loginUser(username: string, password: string) {
  * Registers a new user.
  * @param username The desired username.
  * @param email The user\\'s email address.
- * @param password The user\\'s chosen password.
+ * @param passwordMain The user\\'s chosen password.
+ * @param passwordConfirm The user\\'s confirmed password.
  * @returns The server response, typically containing user details.
  */
-export async function registerUser(username: string, email: string, password: string) {
+export async function registerUser(username: string, email: string, passwordMain: string, passwordConfirm: string) {
   const response = await fetch(`${API_BASE_URL}/api/auth/registration/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, email, password1: passwordMain, password2: passwordConfirm }),
   });
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.detail || 'Registration failed');
+    console.error("Full error data from server:", errorData); // Log the full error object
+    // Throw an error object that includes the errorData
+    throw { message: errorData.detail || 'Registration failed', data: errorData };
   }
   return response.json();
 }

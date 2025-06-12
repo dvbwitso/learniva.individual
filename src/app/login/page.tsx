@@ -1,8 +1,5 @@
-import { GalleryVerticalEnd } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
-import Image from "next/image";
 import { LoginCarousel } from "@/components/login-carousel";
-import learnivaBlackLogo from "../learniva-black.png"; // Import the image
 
 // Import the new Carousel component (we'll create this next)
 export default function LoginPage() {
