@@ -23,18 +23,53 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { UploadCloud, FileText, Brain, Settings, HelpCircle, Sun, Moon, Users, Briefcase, LayoutDashboard } from 'lucide-react'; // Added Users, Briefcase, LayoutDashboard
+// Updated lucide-react imports
+import { UploadCloud, FileText, Brain, Settings as SettingsIcon, HelpCircle as HelpCircleIcon, Sun, Moon, Users, Briefcase, LayoutDashboard, User, ArrowLeft, LogOut as LogOutIcon, MessageSquare } from 'lucide-react'; 
 import { ModeToggle } from "@/components/mode-toggle";
+import { useRouter } from "next/navigation"; 
+import { getUserData } from "@/lib/auth"; 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; 
 
 export default function WorkspacePage() {
   const [currentDate, setCurrentDate] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const userName = "User"; // Replace with actual user name logic
+  const [userName, setUserName] = useState("User"); 
+  const router = useRouter(); 
 
   useEffect(() => {
     const date = new Date();
     setCurrentDate(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' }));
-  }, []);
+
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        try {
+          const userData = await getUserData(token);
+          if (userData.username) {
+            setUserName(userData.username);
+          }
+        } catch (error: any) {
+          console.error("Failed to fetch user data:", error);
+          if (error.message.includes("Authentication credentials were not provided") || error.message.includes("Invalid token")) {
+            localStorage.removeItem("authToken");
+            router.push("/login");
+          }
+        }
+      } else {
+        router.push("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [router]); 
 
   return (
     <SidebarProvider>
@@ -61,16 +96,58 @@ export default function WorkspacePage() {
             </div>
           </div>
 
-          {/* Right Group: Date, Theme Toggle, Avatar */}
+          {/* Right Group: Date, Theme Toggle, Avatar Dropdown */}
           <div className="flex items-center gap-3 sm:gap-4">
             <span className="hidden sm:inline text-sm text-muted-foreground">{currentDate}</span>
             <ModeToggle />
-            <Link href="/profile">
-              <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
-                <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
-                <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full">
+                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
+                    <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
+                    <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/help')}>
+                    <HelpCircleIcon className="mr-2 h-4 w-4" />
+                    <span>Help</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => window.open('https://slack.com', '_blank')}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Visit our Slack Channel</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <span>Back to Landing Page</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  localStorage.removeItem("authToken");
+                  router.push("/login");
+                  console.log('Logout clicked');
+                }}>
+                  <LogOutIcon className="mr-2 h-4 w-4 text-red-500" />
+                  <span className="text-red-500">Log-out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -180,7 +257,7 @@ export default function WorkspacePage() {
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3 bg-background/50 rounded-md">
-                  <HelpCircle className="h-5 w-5 text-primary mt-1 shrink-0" />
+                  <HelpCircleIcon className="h-5 w-5 text-primary mt-1 shrink-0" />
                   <div>
                     <h5 className="font-semibold mb-0.5">Need Help?</h5>
                     <p className="text-muted-foreground">Visit our <Link href="/dashboard/help" className="text-primary hover:underline">Help Center</Link> or <Link href="/dashboard/bug-report" className="text-primary hover:underline">report an issue</Link>.</p>

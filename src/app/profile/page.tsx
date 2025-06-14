@@ -39,11 +39,27 @@ import {
   Link,
   CheckCircle,
   CreditCard,
-  Settings, // Added for Account Settings tab
+  Settings as SettingsIcon, // Renamed to avoid conflict if another Settings is imported
   Briefcase, // Added for Billing tab icon
-  Download // Added for Download Receipt button
+  Download, // Added for Download Receipt button
+  HelpCircle, // Added for Dropdown
+  MessageSquare, // Added for Dropdown
+  ArrowLeft, // Added for Dropdown
+  LogOut as LogOutIcon // Added for Dropdown
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react" // Added useEffect
+import { useRouter } from "next/navigation"; // Added useRouter
+import { getUserData } from "@/lib/auth"; // Added getUserData
+import { ModeToggle } from "@/components/mode-toggle"; // Added ModeToggle
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Added DropdownMenu components
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -93,6 +109,46 @@ export default function ProfilePage() {
     completedCourses: 12,
     currentStreak: 5
   })
+  const router = useRouter(); // Initialize router
+  const [userName, setUserName] = useState("User"); // Default username
+  const [currentDate, setCurrentDate] = useState(''); // Added for header
+
+  useEffect(() => {
+    const date = new Date();
+    setCurrentDate(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' }));
+
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        try {
+          const userData = await getUserData(token);
+          if (userData.username) {
+            setUserName(userData.username);
+          }
+          // Update profileData with fetched data if necessary
+          setProfileData(prev => ({
+            ...prev,
+            first_name: userData.first_name || prev.first_name,
+            last_name: userData.last_name || prev.last_name,
+            username: userData.username || prev.username,
+            display_name: userData.first_name && userData.last_name ? `${userData.first_name} ${userData.last_name}` : prev.display_name,
+            email: userData.email || prev.email,
+            // Assuming other fields like bio, location, website, avatar might come from userData too
+          }));
+        } catch (error: any) {
+          console.error("Failed to fetch user data:", error);
+          if (error.message.includes("Authentication credentials were not provided") || error.message.includes("Invalid token")) {
+            localStorage.removeItem("authToken");
+            router.push("/login");
+          }
+        }
+      } else {
+        router.push("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
 
   const handleSave = () => {
     setIsEditing(false)
@@ -128,8 +184,9 @@ export default function ProfilePage() {
     <SidebarProvider>
       <AppSidebar isCollapsed={false} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
+          {/* Left Group: Sidebar Trigger & Breadcrumbs */}
+          <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
@@ -146,6 +203,61 @@ export default function ProfilePage() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+
+          {/* Right Group: Date, Theme Toggle, Avatar Dropdown */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="hidden sm:inline text-sm text-muted-foreground">{currentDate}</span>
+            <ModeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full">
+                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
+                    {/* Use profileData.avatar if available, otherwise fallback */}
+                    <AvatarImage src={profileData.avatar !== "/placeholder-avatar.jpg" ? profileData.avatar : "https://placehold.co/40x40"} alt="User Avatar" />
+                    <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/help')}>
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    <span>Help</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => window.open('https://slack.com', '_blank')}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Visit our Slack Channel</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <span>Back to Landing Page</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  localStorage.removeItem("authToken");
+                  router.push("/login");
+                  console.log('Logout clicked');
+                }}>
+                  <LogOutIcon className="mr-2 h-4 w-4 text-red-500" />
+                  <span className="text-red-500">Log-out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
 
         <div className="flex flex-1 flex-col gap-6 p-6">
@@ -161,7 +273,7 @@ export default function ProfilePage() {
                 Billing
               </TabsTrigger>
               <TabsTrigger value="account-settings">
-                <Settings className="mr-2 h-4 w-4" />
+                <SettingsIcon className="mr-2 h-4 w-4" />
                 Account Settings
               </TabsTrigger>
             </TabsList>

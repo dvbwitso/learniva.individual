@@ -21,24 +21,58 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Sun, Moon, HelpCircle, MessageSquare, Users, Search, BookOpen, LifeBuoy } from 'lucide-react';
+import { Sun, Moon, HelpCircle as HelpCircleIcon, MessageSquare as MessageSquareIcon, Users, Search, BookOpen, LifeBuoy, User, Settings as SettingsIcon, ArrowLeft, LogOut as LogOutIcon } from 'lucide-react'; // Added User, SettingsIcon, ArrowLeft, LogOutIcon, aliased HelpCircle and MessageSquare
 import { ModeToggle } from "@/components/mode-toggle";
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
   } from "@/components/ui/collapsible"
+import { useRouter } from "next/navigation"; // Added useRouter
+import { getUserData } from "@/lib/auth"; // Added getUserData
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // Added DropdownMenu components
 
 export default function HelpPage() {
   const [currentDate, setCurrentDate] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const userName = "User"; // Replace with actual user name logic
+  const [userName, setUserName] = useState("User"); // Added userName state
   const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter(); // Initialize router
 
   useEffect(() => {
     const date = new Date();
     setCurrentDate(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' }));
-  }, []);
+
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        try {
+          const userData = await getUserData(token);
+          if (userData.username) {
+            setUserName(userData.username);
+          }
+        } catch (error: any) {
+          console.error("Failed to fetch user data:", error);
+          if (error.message.includes("Authentication credentials were not provided") || error.message.includes("Invalid token")) {
+            localStorage.removeItem("authToken");
+            router.push("/login");
+          }
+        }
+      } else {
+        router.push("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [router]); // Added router to dependency array
 
   const faqData = [
     {
@@ -101,12 +135,54 @@ export default function HelpPage() {
           <div className="flex items-center gap-3 sm:gap-4">
             <span className="hidden sm:inline text-sm text-muted-foreground">{currentDate}</span>
             <ModeToggle />
-            <Link href="/profile">
-              <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
-                <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
-                <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full">
+                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
+                    <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
+                    <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/help')}>
+                    <HelpCircleIcon className="mr-2 h-4 w-4" />
+                    <span>Help</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => window.open('https://slack.com', '_blank')}>
+                    <MessageSquareIcon className="mr-2 h-4 w-4" />
+                    <span>Visit our Slack Channel</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <span>Back to Landing Page</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  localStorage.removeItem("authToken");
+                  router.push("/login");
+                  console.log('Logout clicked');
+                }}>
+                  <LogOutIcon className="mr-2 h-4 w-4 text-red-500" />
+                  <span className="text-red-500">Log-out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -115,7 +191,7 @@ export default function HelpPage() {
           <div className="max-w-5xl mx-auto space-y-10">
             
             <div className="text-center mb-12">
-              <HelpCircle className="h-16 w-16 text-primary mx-auto mb-4" />
+              <HelpCircleIcon className="h-16 w-16 text-primary mx-auto mb-4" />
               <h1 className="text-4xl font-bold tracking-tight text-foreground">Help Center</h1>
               <p className="mt-3 text-lg text-muted-foreground">
                 Find answers to your questions, learn how to use Learniva, and get support.
@@ -153,7 +229,7 @@ export default function HelpPage() {
                     <Collapsible key={index} className="border-b last:border-b-0 py-3">
                         <CollapsibleTrigger className="flex justify-between items-center w-full text-left font-medium hover:text-primary transition-colors">
                         {faq.question}
-                        <HelpCircle className="h-4 w-4 text-muted-foreground" /> 
+                        <HelpCircleIcon className="h-4 w-4 text-muted-foreground" /> 
                         </CollapsibleTrigger>
                         <CollapsibleContent className="pt-2 text-sm text-muted-foreground">
                         {faq.answer}
@@ -171,7 +247,7 @@ export default function HelpPage() {
               <Card className="shadow-sm hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <MessageSquare className="h-7 w-7 text-primary" />
+                    <MessageSquareIcon className="h-7 w-7 text-primary" />
                     <CardTitle className="text-2xl">Contact Support</CardTitle>
                   </div>
                   <CardDescription className="mt-1">

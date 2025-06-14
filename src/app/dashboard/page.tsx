@@ -18,6 +18,23 @@ import { UploadAssignmentModal } from "@/components/ui/upload-assignment-modal";
 import { getUserData } from "@/lib/auth"; // Import getUserData
 import { useRouter } from "next/navigation"; // Import useRouter
 import { ModeToggle } from "@/components/mode-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  User,
+  Settings as SettingsIcon,
+  HelpCircle,
+  MessageSquare,
+  ArrowLeft,
+  LogOut as LogOutIcon
+} from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -134,12 +151,54 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3 sm:gap-4">
             <span className="hidden sm:inline text-sm text-muted-foreground">{currentDate}</span>
             <ModeToggle />
-            <Link href="/profile">
-              <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
-                <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
-                <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback> {/* Uses userName state */}
-              </Avatar>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-full">
+                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
+                    <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
+                    <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback> {/* Uses userName state */}
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}> {/* Assuming a settings page route */}
+                    <SettingsIcon className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/help')}>
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    <span>Help</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => window.open('https://slack.com', '_blank')}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Visit our Slack Channel</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <span>Back to Landing Page</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  localStorage.removeItem("authToken");
+                  router.push("/login");
+                  console.log('Logout clicked');
+                }}>
+                  <LogOutIcon className="mr-2 h-4 w-4 text-red-500" />
+                  <span className="text-red-500">Log-out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
