@@ -12,7 +12,7 @@ import {
   ArrowUp,
   Circle,
 } from "lucide-react"
-import { TeamSwitcher } from "@/components/team-switcher"
+
 import {
   Tooltip,
   TooltipContent,
@@ -57,17 +57,6 @@ const LearnivaLogoExpanded = ({ className }: { className?: string }) => (
   </svg>
 )
 const LearnivaLogo = LearnivaLogoExpanded; // Using the expanded logo as the sidebar is either visible or hidden
-
-// Data for TeamSwitcher
-const dataForLogo = {
-  teams: [
-    {
-      name: " ",
-      logo: LearnivaLogo,
-      plan: " ",
-    },
-  ],
-}
 
 // Search Bar, MyWorkspaces, navLinks, UpgradeCard components remain unchanged...
 
@@ -174,8 +163,8 @@ export function AppSidebar({ isCollapsed, ...props }: AppSidebarProps) {
   // We no longer need the 'collapsible' prop or any group-data classes for hiding content.
   return (
     <Sidebar className="flex flex-col h-full border-r bg-background" {...props}>
-      <SidebarHeader className="border-b p-3">
-        <TeamSwitcher teams={dataForLogo.teams} />
+      <SidebarHeader className="border-b p-3 flex items-center">
+        <LearnivaLogo className="w-auto h-6 text-foreground mr-auto" />
         <SearchBar />
       </SidebarHeader>
 
