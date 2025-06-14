@@ -23,8 +23,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Sun, Moon } from "lucide-react"; // Assuming you might want a theme toggle
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UploadCloud, FileText, Brain, Settings, HelpCircle, Sun, Moon, Users, Briefcase, LayoutDashboard, Bug } from 'lucide-react'; 
+import { ModeToggle } from "@/components/mode-toggle";
 
 
 export default function BugReportPage() {
@@ -62,11 +63,7 @@ export default function BugReportPage() {
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
             <span className="hidden sm:inline text-sm text-muted-foreground">{currentDate}</span>
-            <Button variant="outline" size="icon" className="h-9 w-9 sm:h-10 sm:w-10" onClick={() => console.log('Theme toggle clicked - requires next-themes setup')}>
-              <Sun className="h-[1.1rem] w-[1.1rem] sm:h-[1.2rem] sm:w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-[1.1rem] w-[1.1rem] sm:h-[1.2rem] sm:w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
+            <ModeToggle />
             <Link href="/profile">
               <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                 <AvatarImage src="https://placehold.co/40x40" alt="User Avatar" />
