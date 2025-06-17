@@ -67,8 +67,6 @@ export default function DashboardPage() {
 
   // const userName = "Thomas"; // Replaced by state
 
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
   const handleFileUploadComplete = (files: File[]) => {
     console.log("Files submitted:", files);
     // Handle the submitted files here (e.g., send to a server)
@@ -115,7 +113,7 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <SidebarProvider>
-        <AppSidebar isCollapsed={isSidebarCollapsed} />
+        <AppSidebar />
         <SidebarInset className="flex flex-col h-screen overflow-hidden">
         {/* Header */}
         <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
