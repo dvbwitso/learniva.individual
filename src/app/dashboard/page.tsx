@@ -18,6 +18,8 @@ import { UploadAssignmentModal } from "@/components/ui/upload-assignment-modal";
 import { getUserData } from "@/lib/auth"; // Import getUserData
 import { useRouter } from "next/navigation"; // Import useRouter
 import { ModeToggle } from "@/components/mode-toggle";
+import ProtectedRoute from "@/components/protected-route";
+import { useAuth } from "@/contexts/auth-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,42 +52,17 @@ export default function DashboardPage() {
   const inputRef = useRef<HTMLInputElement>(null); 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const [userName, setUserName] = useState("User"); // Default username
-  const [userFirstName, setUserFirstName] = useState("User"); // State for user's first name
-  const router = useRouter(); // Initialize router
+  const { user } = useAuth()
+  const router = useRouter()
+  
+  // Use auth context user data
+  const userName = user?.username || "User";
+  const userFirstName = user?.email ? user.email.split('@')[0] : "User"; // Extract first part of email as firstname fallback
 
   useEffect(() => {
     const date = new Date();
     setCurrentDate(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' }));
-
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        try {
-          const userData = await getUserData(token);
-          console.log("User data:", userData);
-          if (userData.first_name) {
-            setUserFirstName(userData.first_name);
-          }
-          if (userData.username) {
-            setUserName(userData.username); // Set username for Avatar fallback
-          }
-        } catch (error: any) {
-          console.error("Failed to fetch user data:", error);
-          // If token is invalid or expired, redirect to login
-          if (error.message.includes("Authentication credentials were not provided") || error.message.includes("Invalid token")) {
-            localStorage.removeItem("authToken"); // Clear invalid token
-            router.push("/login");
-          }
-        }
-      } else {
-        // No token found, redirect to login
-        router.push("/login");
-      }
-    };
-
-    fetchUserData();
-  }, [router]); // Add router to dependency array
+  }, []);
 
 
   // const userName = "Thomas"; // Replaced by state
@@ -136,9 +113,10 @@ export default function DashboardPage() {
   }, [messages]);
 
   return (
-    <SidebarProvider>
-      <AppSidebar isCollapsed={isSidebarCollapsed} />
-      <SidebarInset className="flex flex-col h-screen overflow-hidden">
+    <ProtectedRoute>
+      <SidebarProvider>
+        <AppSidebar isCollapsed={isSidebarCollapsed} />
+        <SidebarInset className="flex flex-col h-screen overflow-hidden">
         {/* Header */}
         <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background px-4 sm:px-6">
           {/* Left Group: Sidebar Trigger & Optional Logo */}
@@ -323,5 +301,6 @@ export default function DashboardPage() {
         onUploadComplete={handleFileUploadComplete}
       />
     </SidebarProvider>
+    </ProtectedRoute>
   );
 }

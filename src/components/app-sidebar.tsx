@@ -30,8 +30,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
-import { logoutUser } from "@/lib/auth"; // Import the logoutUser function
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 // --- SVG Logo Components (remain unchanged) ---
 // Expanded logo (full text + symbol)
@@ -130,7 +130,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ isCollapsed, ...props }: AppSidebarProps) {
-  const router = useRouter(); // Initialize the router
+  const { logout } = useAuth()
 
   // If the sidebar is collapsed, render nothing.
   if (isCollapsed) {
@@ -139,23 +139,10 @@ export function AppSidebar({ isCollapsed, ...props }: AppSidebarProps) {
 
   const handleLogout = async () => {
     try {
-      // Assuming you store the auth token in localStorage or a similar place
-      const authToken = localStorage.getItem("authToken");
-      if (authToken) {
-        await logoutUser(authToken);
-        localStorage.removeItem("authToken"); // Clear the token
-        // Redirect to login page or home page after logout
-        router.push("/login");
-      } else {
-        console.error("No auth token found for logout");
-        // Optionally, redirect to login even if no token, as a fallback
-        router.push("/login");
-      }
+      await logout()
+      toast.success("Logged out successfully")
     } catch (error) {
-      console.error("Logout failed:", error);
-      // Handle logout error (e.g., show a notification to the user)
-      // For now, we can still try to redirect to login
-      router.push("/login");
+      toast.error("Error logging out")
     }
   };
 

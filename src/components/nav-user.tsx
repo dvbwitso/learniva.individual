@@ -34,6 +34,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 export function NavUser({
   user,
@@ -45,7 +47,16 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { logout } = useAuth()
 
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast.success("Logged out successfully")
+    } catch (error) {
+      toast.error("Error logging out")
+    }
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -106,7 +117,7 @@ export function NavUser({
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => { /* Add your logout logic here */ console.log('Logout clicked') }}>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4 text-red-500" />
           <span className="text-red-500">Log-out</span>
         </DropdownMenuItem>

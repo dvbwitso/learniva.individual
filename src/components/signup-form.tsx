@@ -4,25 +4,25 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import LearnivaLogo from "@/app/learniva-black.png"
+import Image from "next/image"
 import { useState } from "react"
-import { useRouter } from "next/navigation" // Import useRouter
-import { registerUser } from "@/lib/auth" // Import registerUser
+import { useRouter } from "next/navigation"
+import { registerUser } from "@/lib/auth"
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-  const [usernameError, setUsernameError] = useState<string | null>(null) // Add state for username
+  const [usernameError, setUsernameError] = useState<string | null>(null)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false) // Add isLoading state
-  const router = useRouter() // Initialize useRouter
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const username = (event.currentTarget.elements.namedItem("username") as HTMLInputElement)?.value // Get username
+    const username = (event.currentTarget.elements.namedItem("username") as HTMLInputElement)?.value
     const email = (event.currentTarget.elements.namedItem("email") as HTMLInputElement)?.value
     const password = (event.currentTarget.elements.namedItem("password") as HTMLInputElement)?.value
     const confirmPassword = (event.currentTarget.elements.namedItem("confirm-password") as HTMLInputElement)?.value
@@ -61,7 +61,7 @@ export function SignupForm({
       return
     }
 
-    setIsLoading(true) // Set loading state
+    setIsLoading(true)
 
     try {
       // Pass both password and confirmPassword to registerUser
@@ -109,87 +109,116 @@ export function SignupForm({
         setPasswordError("An unexpected error occurred. Please try again.")
       }
     } finally {
-      setIsLoading(false) // Reset loading state
+      setIsLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className={cn("flex flex-col gap-6", className)} {...props}>
+    <form onSubmit={handleSubmit} className={cn("flex flex-col gap-8", className)} {...props}>
+      {/* Logo */}
       <div className="flex justify-start">
-        <img src={LearnivaLogo.src ?? LearnivaLogo} alt="Learniva Logo" className="h-9 w-50" />
+        <div className="text-foreground dark:text-white">
+          <Image
+            src="/learniva-logo-full.svg"
+            alt="Learniva Logo"
+            width={180}
+            height={54}
+            style={{ height: 'auto' }}
+            className="dark:brightness-0 dark:invert"
+          />
+        </div>
       </div>
+
+      {/* Header */}
       <div className="flex flex-col items-start gap-2 text-left">
-        <h1 className="text-2xl font-bold">Create an account</h1>
-        <p className="text-muted-foreground text-sm text-balance">
-          Enter your email below to create your account
+        <h1 className="text-2xl font-bold text-foreground">Create an account</h1>
+        <p className="text-muted-foreground text-sm">
+          Enter your information below to create your account
         </p>
       </div>
+
+      {/* Form Fields */}
       <div className="grid gap-6">
         <div className="grid gap-3">
-          <Label htmlFor="username">Username</Label> {/* Add Username Field */}
+          <Label htmlFor="username" className="text-sm font-medium text-foreground">Username</Label>
           <Input
             id="username"
             type="text"
-            placeholder="yourusername"
+            placeholder="Enter your username"
             required
             disabled={isLoading}
-            className={cn(usernameError && "border-red-500 focus-visible:ring-red-500")}
+            className={cn(
+              "h-12 rounded-xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200",
+              usernameError && "border-destructive focus:ring-destructive"
+            )}
           />
-          {usernameError && <p className="text-sm text-red-500">{usernameError}</p>}
+          {usernameError && <p className="text-sm text-destructive">{usernameError}</p>}
         </div>
+
         <div className="grid gap-3">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
+            placeholder="Enter your email"
             required
-            className={cn(emailError && "border-red-500 focus-visible:ring-red-500")}
+            disabled={isLoading}
+            className={cn(
+              "h-12 rounded-xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200",
+              emailError && "border-destructive focus:ring-destructive"
+            )}
           />
-          {emailError && <p className="text-sm text-red-500">{emailError}</p>}
+          {emailError && <p className="text-sm text-destructive">{emailError}</p>}
         </div>
+
         <div className="grid gap-3">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
           <Input
             id="password"
             type="password"
+            placeholder="Create a password"
             required
-            className={cn(passwordError && "border-red-500 focus-visible:ring-red-500")}
+            disabled={isLoading}
+            className={cn(
+              "h-12 rounded-xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200",
+              passwordError && "border-destructive focus:ring-destructive"
+            )}
           />
-          {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
+          {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
         </div>
+
         <div className="grid gap-3">
-          <Label htmlFor="confirm-password">Confirm Password</Label>
+          <Label htmlFor="confirm-password" className="text-sm font-medium text-foreground">Confirm Password</Label>
           <Input
             id="confirm-password"
             type="password"
+            placeholder="Confirm your password"
             required
-            className={cn(confirmPasswordError && "border-red-500 focus-visible:ring-red-500")}
+            disabled={isLoading}
+            className={cn(
+              "h-12 rounded-xl border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200",
+              confirmPasswordError && "border-destructive focus:ring-destructive"
+            )}
           />
-          {confirmPasswordError && <p className="text-sm text-red-500">{confirmPasswordError}</p>}
+          {confirmPasswordError && <p className="text-sm text-destructive">{confirmPasswordError}</p>}
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}> {/* Disable button when loading */}
-          {isLoading ? "Creating account..." : "Create account"} {/* Change button text when loading */}
+
+        {/* Create Account Button */}
+        <Button 
+          type="submit" 
+          className="h-12 w-full bg-white text-black border border-border hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm" 
+          disabled={isLoading}
+        >
+          {isLoading ? "Creating account..." : "Create account"}
         </Button>
-        <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-          <span className="bg-background text-muted-foreground relative z-10 px-2">
-            Or continue with
-          </span>
-        </div>
-        <Button variant="outline" className="w-full">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path
-              d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
-              fill="currentColor"
-            />
-          </svg>
-          Sign up with GitHub
-        </Button>
+
       </div>
-      <div className="text-center text-sm">
+
+      {/* Login Link */}
+      <div className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <a href="/login" className="underline underline-offset-4">
-          Login
+        <a href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors duration-200">
+          Sign in
         </a>
       </div>
     </form>
