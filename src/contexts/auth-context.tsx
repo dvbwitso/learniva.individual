@@ -5,8 +5,20 @@ import { loginUser, getUserData, logoutUser } from '@/lib/auth';
 
 interface User {
   id: number;
+  pk: number;
   username: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
+  // Profile fields
+  bio?: string;
+  avatar?: string;
+  display_name?: string;
+  location?: string;
+  website?: string;
+  created_at?: string;
+  // Additional computed fields
+  full_name?: string;
 }
 
 interface AuthContextType {

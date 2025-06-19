@@ -136,7 +136,7 @@ const NavItem = ({ item, isCollapsed }: { item: NavItemType, isCollapsed: boolea
                         className={clsx("h-10 w-10 shrink-0", item.active ? activeClasses : inactiveClasses)}
                         asChild
                     >
-                        <Link href={item.href}><Icon className="h-5 w-5" /></Link>
+                        <Link href={item.href}><Icon className="h-6 w-6" /></Link>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-popover text-popover-foreground border-border">
@@ -325,7 +325,7 @@ export function AppSidebar() {
                                      className="h-10 w-10 shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
                                      onClick={handleLogout}
                                  >
-                                     <LogOut className="h-5 w-5" />
+                                     <LogOut className="h-6 w-6" />
                                  </Button>
                              </TooltipTrigger>
                              <TooltipContent side="right" className="bg-popover text-popover-foreground border-border">

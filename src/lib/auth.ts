@@ -1,6 +1,64 @@
 // API base URL - consider moving this to an environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'; // Default to localhost if not set
 
+// Profile-related interfaces
+export interface UserProfile {
+  id?: number;
+  pk?: number;
+  username: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  bio?: string;
+  avatar?: string;
+  display_name?: string;
+  location?: string;
+  website?: string;
+  created_at?: string;
+  full_name?: string;
+}
+
+export interface UserPreferences {
+  theme?: 'dark' | 'light';
+  verbosity?: 'concise' | 'moderate' | 'detailed' | 'narrator';
+  teaching_style?: 'direct_technical' | 'supportive_engaging';
+  language?: string;
+  notifications?: {
+    email_notifications?: boolean;
+    push_notifications?: boolean;
+    marketing_emails?: boolean;
+  };
+}
+
+export interface ProfileStatistics {
+  completedCourses?: number;
+  currentStreak?: number;
+  totalStudyTime?: number;
+  achievementsCount?: number;
+  documentsUploaded?: number;
+  learningMaterialsCreated?: number;
+}
+
+export interface ConnectedAccount {
+  provider: string;
+  connected: boolean;
+  email?: string;
+  username?: string;
+  account_id?: string;
+  connected_at?: string;
+}
+
+export interface BillingInfo {
+  plan: string;
+  plan_type: 'free' | 'pro' | 'enterprise';
+  price: string;
+  billing_cycle?: string;
+  next_billing_date?: string | null;
+  payment_method?: string | null;
+  payment_type?: string | null;
+  status: 'active' | 'inactive' | 'cancelled' | 'past_due';
+}
+
 /**
  * Logs in a user.
  * @param username The user\\'s username.
@@ -181,3 +239,228 @@ export async function logoutUser(authToken: string) {
 }
 
 // Social Authentication
+
+/**
+ * Gets the complete user profile information.
+ * @param authToken The user's authentication token.
+ * @returns The server response containing complete profile data.
+ */
+export async function getUserProfile(authToken: string): Promise<UserProfile> {
+  const response = await fetch(`${API_BASE_URL}/api/profile/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to fetch user profile');
+  }
+  const data = await response.json();
+  // Handle response format based on API documentation
+  return data.data || data;
+}
+
+/**
+ * Updates the user profile information.
+ * @param authToken The user's authentication token.
+ * @param profileData The profile data to update.
+ * @returns The server response.
+ */
+export async function updateUserProfile(authToken: string, profileData: Partial<UserProfile>): Promise<UserProfile> {
+  const response = await fetch(`${API_BASE_URL}/api/profile/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+    body: JSON.stringify(profileData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to update profile');
+  }
+  const data = await response.json();
+  return data.data || data;
+}
+
+/**
+ * Updates basic account details (name, email).
+ * @param authToken The user's authentication token.
+ * @param accountData The account data to update.
+ * @returns The server response.
+ */
+export async function updateAccountDetails(authToken: string, accountData: {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+}): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/profile/update_account/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+    body: JSON.stringify(accountData),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to update account details');
+  }
+  const data = await response.json();
+  return data.data || data;
+}
+
+/**
+ * Gets user preferences.
+ * @param authToken The user's authentication token.
+ * @returns The server response containing user preferences.
+ */
+export async function getUserPreferences(authToken: string): Promise<UserPreferences> {
+  const response = await fetch(`${API_BASE_URL}/api/profile/preferences/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to fetch user preferences');
+  }
+  const data = await response.json();
+  return data.data || data;
+}
+
+/**
+ * Updates user preferences.
+ * @param authToken The user's authentication token.
+ * @param preferences The preferences to update.
+ * @returns The server response.
+ */
+export async function updateUserPreferences(authToken: string, preferences: Partial<UserPreferences>): Promise<UserPreferences> {
+  const response = await fetch(`${API_BASE_URL}/api/settings/preferences/`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+    body: JSON.stringify(preferences),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to update preferences');
+  }
+  const data = await response.json();
+  return data.data || data;
+}
+
+/**
+ * Gets user profile statistics.
+ * @param authToken The user's authentication token.
+ * @returns The server response containing statistics.
+ */
+export async function getProfileStatistics(authToken: string): Promise<ProfileStatistics> {
+  const response = await fetch(`${API_BASE_URL}/api/profile/statistics/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to fetch profile statistics');
+  }
+  const data = await response.json();
+  return data.data || data;
+}
+
+/**
+ * Uploads a new avatar image.
+ * @param authToken The user's authentication token.
+ * @param avatarFile The image file to upload.
+ * @returns The server response containing the new avatar URL.
+ */
+export async function uploadAvatar(authToken: string, avatarFile: File): Promise<{avatar_url: string}> {
+  const formData = new FormData();
+  formData.append('avatar', avatarFile);
+
+  const response = await fetch(`${API_BASE_URL}/api/profile/upload_avatar/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Token ${authToken}`,
+    },
+    body: formData,
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to upload avatar');
+  }
+  const data = await response.json();
+  return data.data || data;
+}
+
+/**
+ * Removes the current avatar.
+ * @param authToken The user's authentication token.
+ * @returns The server response.
+ */
+export async function removeAvatar(authToken: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/api/profile/remove_avatar/`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Token ${authToken}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to remove avatar');
+  }
+  return response.status === 204 ? null : response.json();
+}
+
+/**
+ * Gets the status of cloud integrations.
+ * @param authToken The user's authentication token.
+ * @param provider The integration provider (google-drive, github, notion).
+ * @returns The server response containing integration status.
+ */
+export async function getIntegrationStatus(authToken: string, provider: string): Promise<ConnectedAccount> {
+  const response = await fetch(`${API_BASE_URL}/api/integrations/${provider}/status/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || `Failed to fetch ${provider} integration status`);
+  }
+  const data = await response.json();
+  return data.data || data;
+}
+
+/**
+ * Gets the authorization URL for a cloud integration.
+ * @param authToken The user's authentication token.
+ * @param provider The integration provider (google-drive, github, notion).
+ * @returns The server response containing the auth URL.
+ */
+export async function getIntegrationAuthUrl(authToken: string, provider: string): Promise<{auth_url: string}> {
+  const response = await fetch(`${API_BASE_URL}/api/integrations/${provider}/auth_url/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${authToken}`,
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || `Failed to get ${provider} auth URL`);
+  }
+  const data = await response.json();
+  return data.data || data;
+}
